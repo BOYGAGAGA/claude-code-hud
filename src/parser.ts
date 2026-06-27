@@ -828,12 +828,13 @@ export function parseSessionFile(filePath: string, config: CostConfig): SessionS
   let sessionId = '';
   let sessionTitle = '';
   const todos: Array<{ content: string; status: string; model: string }> = [];
-  const todoMap = new Map<string, { content: string; status: string; model: string }>();
-  const agentTaskMap = new Map<string, Map<string, { content: string; status: string; model: string }>>();
+  let todoMap = new Map<string, { content: string; status: string; model: string }>();
+  let agentTaskMap = new Map<string, Map<string, { content: string; status: string; model: string }>>();
   const toolCounts: Record<string, number> = {};
   let webSearches = 0;
   let webFetches = 0;
   let rounds = 0;
+  let lastTodoWriteIndex = -1;  // Track the last TodoWrite call index
 
   for (const line of lines) {
     if (!line.trim()) continue;
@@ -905,6 +906,22 @@ export function parseSessionFile(filePath: string, config: CostConfig): SessionS
             const input = item.input;
             const todosArr = input?.todos;
             if (Array.isArray(todosArr)) {
+              // Detect new round: if this TodoWrite has different tasks than before
+              // Clear old tasks to show only current round
+              const currentKeys = new Set(todosArr.map((t: any) => t.content || t.activeForm || ''));
+              const existingKeys = new Set(todoMap.keys());
+
+              // If more than half the tasks are new, treat as new round
+              let newCount = 0;
+              for (const key of currentKeys) {
+                if (!existingKeys.has(key)) newCount++;
+              }
+
+              if (newCount > currentKeys.size / 2 && currentKeys.size > 0) {
+                // New round detected - clear old tasks
+                todoMap.clear();
+                agentTaskMap.clear();
+              }
               for (const t of todosArr) {
                 const key = t.content || t.activeForm || '';
                 const todoItem = {

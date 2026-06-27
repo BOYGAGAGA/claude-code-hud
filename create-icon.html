@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head><title>Create Icon</title></head>
+<body>
+<canvas id="canvas" width="128" height="128"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Background
+ctx.fillStyle = '#1e1e2e';
+ctx.beginPath();
+ctx.roundRect(0, 0, 128, 128, 16);
+ctx.fill();
+
+// HUD frame
+ctx.strokeStyle = '#89b4fa';
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.roundRect(12, 12, 104, 104, 8);
+ctx.stroke();
+
+// Progress bar background
+ctx.fillStyle = '#313244';
+ctx.fillRect(24, 45, 80, 12);
+
+// Progress bar fill
+ctx.fillStyle = '#a6e3a1';
+ctx.fillRect(24, 45, 60, 12);
+
+// Text
+ctx.fillStyle = '#cdd6f4';
+ctx.font = 'bold 14px monospace';
+ctx.fillText('HUD', 44, 35);
+
+// Percentage
+ctx.fillStyle = '#89b4fa';
+ctx.font = 'bold 20px monospace';
+ctx.fillText('75%', 40, 80);
+
+// Robot emoji
+ctx.font = '24px serif';
+ctx.fillText('🤖', 48, 110);
+</script>
+</body>
+</html>

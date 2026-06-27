@@ -2,7 +2,7 @@
   "name": "claude-code-hud-fixed",
   "displayName": "Claude Code HUD (Fixed)",
   "description": "Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and task progress - Windows path fix",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "publisher": "LIMINXUE",
   "icon": "icon.png",
   "repository": {

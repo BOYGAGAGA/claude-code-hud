@@ -4,6 +4,12 @@ Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and t
 
 **This is a fixed version** that properly handles Windows paths with backslashes, colons, and spaces.
 
+## v1.3.4 更新日志 (2026-06-27)
+
+### 🐛 修复
+- **Tasks 面板自动刷新**：新一轮任务开始时，自动清除旧任务，只显示当前轮次
+- 智能检测新任务：当超过半数任务为新内容时，判定为新一轮
+
 ## v1.3.2 更新日志 (2026-06-27)
 
 ### 🎨 新增
