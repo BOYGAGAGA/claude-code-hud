@@ -4,6 +4,17 @@ Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and t
 
 **This is a fixed version** that properly handles Windows paths with backslashes, colons, and spaces.
 
+## v1.4.0 更新日志 (2026-06-27)
+
+### ✨ 新功能
+- **会话切换器**：下拉菜单选择不同会话，不再只显示单一会话
+- 多个会话时显示下拉选择框
+- 单个会话时显示会话标题
+- 点击 📌 可取消固定会话
+
+### 🐛 修复
+- Tasks 面板自动刷新：新一轮任务开始时自动清除旧任务
+
 ## v1.3.4 更新日志 (2026-06-27)
 
 ### 🐛 修复

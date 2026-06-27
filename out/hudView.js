@@ -5,6 +5,8 @@ class HudViewProvider {
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
         this._stats = null;
+        this._sessions = [];
+        this._pinnedFile = null;
         this._dailySpend = [];
         this._thresholds = {};
     }
@@ -19,8 +21,10 @@ class HudViewProvider {
         });
         this._render();
     }
-    update(stats, _sessions, _pinnedFile, dailySpend, thresholds) {
+    update(stats, sessions, pinnedFile, dailySpend, thresholds) {
         this._stats = stats;
+        this._sessions = sessions ?? [];
+        this._pinnedFile = pinnedFile;
         this._dailySpend = dailySpend ?? [];
         this._thresholds = thresholds ?? {};
         this._render();
@@ -29,7 +33,7 @@ class HudViewProvider {
         if (!this._view)
             return;
         this._view.webview.html = this._stats
-            ? buildHtml(this._stats, this._dailySpend, this._thresholds)
+            ? buildHtml(this._stats, this._sessions, this._pinnedFile, this._dailySpend, this._thresholds)
             : buildEmptyHtml();
     }
 }
@@ -70,13 +74,19 @@ function todoStatusClass(status) {
         default: return 'todo-pending';
     }
 }
-function buildHtml(s, dailySpend, thresholds) {
+function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     const contextPct = Math.min(100, (s.usage.inputTokens / s.contextLimit) * 100);
     const cachePct = Math.round(s.cache.hitRate * 100);
     const totalTodos = s.todos.length;
     const doneTodos = s.todos.filter((t) => t.status === 'completed').length;
     const activeTodos = s.todos.filter((t) => t.status === 'in_progress').length;
     const totalPct = totalTodos > 0 ? Math.round((doneTodos / totalTodos) * 100) : 0;
+    // Session selector
+    const sessionOptions = sessions.map((sess) => {
+        const isSelected = sess.filePath === s.sessionFile;
+        const title = sess.title.length > 40 ? sess.title.slice(0, 39) + '…' : sess.title;
+        return `<option value="${escHtml(sess.filePath)}" ${isSelected ? 'selected' : ''}>${escHtml(title)}</option>`;
+    }).join('');
     // Agent groups
     const agentGroups = s.agents || [];
     const totalAgentTasks = agentGroups.reduce((a, g) => a + g.totalCount, 0);
@@ -427,10 +437,37 @@ function buildHtml(s, dailySpend, thresholds) {
     color: var(--vscode-foreground);
     font-size: 11px;
   }
+  .session-select {
+    flex: 1;
+    background: var(--vscode-input-background, #1e1e2e);
+    color: var(--vscode-foreground);
+    border: 1px solid var(--vscode-widget-border, #333);
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+  .session-select:hover {
+    border-color: var(--vscode-textLink-foreground, #4ec9b0);
+  }
+  .session-select option {
+    background: var(--vscode-input-background, #1e1e2e);
+    color: var(--vscode-foreground);
+  }
   .session-title-id {
     color: #555;
     font-size: 10px;
     flex-shrink: 0;
+  }
+  .pinned-badge {
+    cursor: pointer;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .pinned-badge:hover {
+    opacity: 0.7;
   }
   .gear-btn {
     flex-shrink: 0;
@@ -484,13 +521,28 @@ function buildHtml(s, dailySpend, thresholds) {
 <script>
   const vscode = acquireVsCodeApi();
   function openSettings() { vscode.postMessage({ command: 'openSettings' }); }
+  function switchSession(filePath) {
+    if (filePath) {
+      vscode.postMessage({ command: 'switchSession', filePath: filePath });
+    }
+  }
+  function unpinSession() {
+    vscode.postMessage({ command: 'unpinSession' });
+  }
 </script>
 
-<!-- Session Title -->
+<!-- Session Selector -->
 <div class="session-title-bar">
   <span class="session-title-icon">💬</span>
-  <span class="session-title-text" title="${escHtml(s.sessionTitle)}">${escHtml(truncate(s.sessionTitle, 60))}</span>
+  ${sessions.length > 1 ? `
+    <select class="session-select" onchange="switchSession(this.value)" title="选择会话">
+      ${sessionOptions}
+    </select>
+  ` : `
+    <span class="session-title-text" title="${escHtml(s.sessionTitle)}">${escHtml(truncate(s.sessionTitle, 60))}</span>
+  `}
   <span class="session-title-id">${s.sessionId.slice(0, 8)}</span>
+  ${pinnedFile ? '<span class="pinned-badge" onclick="unpinSession()" title="点击取消固定">📌</span>' : ''}
   <button class="gear-btn" onclick="openSettings()" title="打开配置文件">⚙</button>
 </div>
 
