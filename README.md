@@ -1,8 +1,57 @@
-# Claude Code HUD (Fixed) v1.3.0
+# Claude Code HUD (Fixed) v1.4.0
 
 Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and task progress.
 
 **This is a fixed version** that properly handles Windows paths with backslashes, colons, and spaces.
+
+---
+
+## 📦 安装方式
+
+### 方式 1：VS Code 扩展面板（推荐）
+
+1. 打开 VS Code
+2. 按 `Ctrl+Shift+X` 打开 **Extensions** 面板
+3. 搜索 `claude-code-hud-fixed`
+4. 点击 **Install** 安装
+
+### 方式 2：快速安装命令
+
+在 VS Code 中按 `Ctrl+P`，粘贴以下命令并回车：
+
+```
+ext install LIMINXUE.claude-code-hud-fixed
+```
+
+### 方式 3：从 VSIX 文件安装
+
+1. 从 [GitHub Releases](https://github.com/BOYGAGAGA/claude-code-hud/releases) 下载 `.vsix` 文件
+2. 在 VS Code 中：Extensions 面板 → `...` → **Install from VSIX**
+3. 选择下载的 `.vsix` 文件
+
+### 方式 4：命令行安装
+
+```bash
+code --install-extension LIMINXUE.claude-code-hud-fixed
+```
+
+### 使用方式
+
+1. 打开任意项目，启动 **Claude Code**
+2. HUD 会自动检测会话并显示数据
+3. 点击左侧 Activity Bar 的 🤖 图标打开 HUD 面板
+4. 底部状态栏会实时显示关键指标
+
+---
+
+## 🔗 链接
+
+| 链接 | URL |
+|------|-----|
+| **Marketplace** | https://marketplace.visualstudio.com/items?itemName=LIMINXUE.claude-code-hud-fixed |
+| **GitHub** | https://github.com/BOYGAGAGA/claude-code-hud |
+
+---
 
 ## v1.4.0 更新日志 (2026-06-27)
 

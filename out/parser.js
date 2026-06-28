@@ -957,22 +957,51 @@ function parseSessionFile(filePath, config) {
         contextLimitSource: config.contextLimit != null ? 'config' : 'auto',
     };
 }
+// Get active session IDs from ~/.claude/sessions/
+function getActiveSessionIds() {
+    const sessionsDir = path.join(os.homedir(), '.claude', 'sessions');
+    const activeIds = new Set();
+    try {
+        if (fs.existsSync(sessionsDir)) {
+            for (const f of fs.readdirSync(sessionsDir)) {
+                if (!f.endsWith('.json'))
+                    continue;
+                try {
+                    const data = JSON.parse(fs.readFileSync(path.join(sessionsDir, f), 'utf8'));
+                    if (data.sessionId) {
+                        activeIds.add(data.sessionId);
+                    }
+                }
+                catch { /* skip */ }
+            }
+        }
+    }
+    catch { /* skip */ }
+    return activeIds;
+}
 function listSessions(workspacePath, limit = 8) {
     const projectDir = resolveProjectDir(workspacePath);
     if (!projectDir)
         return [];
+    const activeSessionIds = getActiveSessionIds();
     return fs.readdirSync(projectDir)
         .filter(f => f.endsWith('.jsonl'))
         .map(f => {
         const fp = path.join(projectDir, f);
         const mtime = fs.statSync(fp).mtime.getTime();
-        return { filePath: fp, mtime };
+        const sessionId = path.basename(fp, '.jsonl');
+        return { filePath: fp, sessionId, mtime };
     })
         .sort((a, b) => b.mtime - a.mtime)
+        // Filter: only show active sessions or recent ones (last 24h)
+        .filter(s => {
+        const isActive = activeSessionIds.has(s.sessionId);
+        const isRecent = (Date.now() - s.mtime) < 24 * 60 * 60 * 1000;
+        return isActive || isRecent;
+    })
         .slice(0, limit)
-        .map(({ filePath, mtime }) => {
+        .map(({ filePath, mtime, sessionId }) => {
         const title = readFirstUserMessage(filePath);
-        const sessionId = path.basename(filePath, '.jsonl');
         return { filePath, sessionId, title, mtime };
     });
 }
