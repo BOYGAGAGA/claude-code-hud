@@ -1111,13 +1111,26 @@ function readFirstUserMessage(filePath: string): string {
         if (d.type !== 'user') continue;
         const msg = d.message;
         const c = msg?.content;
-        if (typeof c === 'string' && c.trim()) return c.trim();
+        let candidate: string | null = null;
+        if (typeof c === 'string' && c.trim()) candidate = c.trim();
         if (Array.isArray(c)) {
           for (const item of c) {
             if (item?.type === 'text' && typeof item.text === 'string' && item.text.trim()) {
-              return item.text.trim();
+              candidate = item.text.trim();
+              break;
             }
           }
+        }
+        if (candidate) {
+          // Skip system messages: IDE notifications, system reminders, user-info
+          if (candidate.startsWith('<ide_') ||
+              candidate.startsWith('<system-') ||
+              candidate.startsWith('<user-info') ||
+              candidate.startsWith('<gitStatus') ||
+              candidate.length < 3) {
+            continue;
+          }
+          return candidate;
         }
       } catch { /* skip */ }
     }
