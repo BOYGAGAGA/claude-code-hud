@@ -220,6 +220,18 @@ function activate(context) {
             pinnedSessionFile = null;
             refresh();
         }
+        else if (msg.command === 'toggleAutoFollow') {
+            if (pinnedSessionFile) {
+                // Currently pinned — unpin to auto-follow
+                pinnedSessionFile = null;
+            }
+            else {
+                // Currently auto-following — pin to current session
+                const workspacePath = getWorkspacePath();
+                pinnedSessionFile = (0, parser_1.findActiveSession)(workspacePath);
+            }
+            refresh();
+        }
     });
     function startTimer() {
         if (refreshTimer)

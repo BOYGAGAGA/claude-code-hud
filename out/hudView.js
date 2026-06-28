@@ -481,6 +481,19 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     transition: color 0.15s;
   }
   .gear-btn:hover { color: var(--vscode-foreground); }
+  .auto-follow-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 2px;
+    line-height: 1;
+    transition: opacity 0.15s;
+  }
+  .auto-follow-btn:hover { opacity: 0.7; }
+  .follow-on { opacity: 1; }
+  .follow-off { opacity: 0.4; }
   .budget-bar-wrap {
     display: flex;
     align-items: center;
@@ -529,6 +542,9 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
   function unpinSession() {
     vscode.postMessage({ command: 'unpinSession' });
   }
+  function toggleAutoFollow() {
+    vscode.postMessage({ command: 'toggleAutoFollow' });
+  }
 </script>
 
 <!-- Session Selector -->
@@ -542,7 +558,7 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     <span class="session-title-text" title="${escHtml(s.sessionTitle)}">${escHtml(truncate(s.sessionTitle, 60))}</span>
   `}
   <span class="session-title-id">${s.sessionId.slice(0, 8)}</span>
-  ${pinnedFile ? '<span class="pinned-badge" onclick="unpinSession()" title="点击取消固定">📌</span>' : ''}
+  <button class="auto-follow-btn ${pinnedFile ? 'follow-off' : 'follow-on'}" onclick="toggleAutoFollow()" title="${pinnedFile ? '已固定 → 点击恢复自动跟随' : '自动跟随最新会话 → 点击固定'}">${pinnedFile ? '📍' : '🔄'}</button>
   <button class="gear-btn" onclick="openSettings()" title="打开配置文件">⚙</button>
 </div>
 

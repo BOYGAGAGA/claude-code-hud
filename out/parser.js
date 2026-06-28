@@ -753,6 +753,8 @@ function parseSessionFile(filePath, config) {
     let webFetches = 0;
     let rounds = 0;
     let lastTodoWriteIndex = -1; // Track the last TodoWrite call index
+    // Try to get title from Claude Code history first
+    const historyTitles = readHistoryTitles();
     for (const line of lines) {
         if (!line.trim())
             continue;
@@ -918,7 +920,7 @@ function parseSessionFile(filePath, config) {
     return {
         sessionId,
         sessionFile: filePath,
-        sessionTitle: sessionTitle.trim() || 'Untitled Session',
+        sessionTitle: (sessionId && historyTitles.has(sessionId) ? historyTitles.get(sessionId) : (sessionTitle.trim() || 'Untitled Session')),
         usage,
         cost: {
             inputCost,
@@ -979,11 +981,35 @@ function getActiveSessionIds() {
     catch { /* skip */ }
     return activeIds;
 }
+// Read session titles from Claude Code history file
+function readHistoryTitles() {
+    const historyFile = path.join(os.homedir(), '.claude', 'history.jsonl');
+    const titles = new Map();
+    try {
+        if (fs.existsSync(historyFile)) {
+            const content = fs.readFileSync(historyFile, 'utf8');
+            for (const line of content.split('\n')) {
+                if (!line.trim())
+                    continue;
+                try {
+                    const entry = JSON.parse(line);
+                    if (entry.sessionId && entry.display) {
+                        titles.set(entry.sessionId, entry.display);
+                    }
+                }
+                catch { /* skip */ }
+            }
+        }
+    }
+    catch { /* skip */ }
+    return titles;
+}
 function listSessions(workspacePath, limit = 8) {
     const projectDir = resolveProjectDir(workspacePath);
     if (!projectDir)
         return [];
     const activeSessionIds = getActiveSessionIds();
+    const historyTitles = readHistoryTitles();
     return fs.readdirSync(projectDir)
         .filter(f => f.endsWith('.jsonl'))
         .map(f => {
@@ -1001,7 +1027,8 @@ function listSessions(workspacePath, limit = 8) {
     })
         .slice(0, limit)
         .map(({ filePath, mtime, sessionId }) => {
-        const title = readFirstUserMessage(filePath);
+        // Use Claude Code's own display title, fall back to first user message
+        const title = historyTitles.get(sessionId) ?? readFirstUserMessage(filePath);
         return { filePath, sessionId, title, mtime };
     });
 }

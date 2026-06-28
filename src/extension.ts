@@ -214,6 +214,16 @@ export function activate(context: vscode.ExtensionContext) {
     } else if (msg.command === 'unpinSession') {
       pinnedSessionFile = null;
       refresh();
+    } else if (msg.command === 'toggleAutoFollow') {
+      if (pinnedSessionFile) {
+        // Currently pinned — unpin to auto-follow
+        pinnedSessionFile = null;
+      } else {
+        // Currently auto-following — pin to current session
+        const workspacePath = getWorkspacePath();
+        pinnedSessionFile = findActiveSession(workspacePath);
+      }
+      refresh();
     }
   });
 
