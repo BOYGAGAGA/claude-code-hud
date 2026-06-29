@@ -1121,18 +1121,20 @@ export function listSessions(workspacePath: string, limit = 8): SessionInfo[] {
     })
     .sort((a, b) => b.mtime - a.mtime);
 
-  // Filter: prefer active sessions; if none, fall back to recent ones (24h)
+  // Filter: ONLY show active sessions. Fall back to recent (24h) only when none active.
   const activeSessions = allSessions.filter(s => activeSessionIds.has(s.sessionId));
-  const recentSessions = allSessions.filter(s =>
-    !activeSessionIds.has(s.sessionId) && (Date.now() - s.mtime) < 24 * 60 * 60 * 1000
-  );
+  let selected: typeof allSessions;
 
-  // Show active sessions first, then recent non-active ones, up to limit
-  const visible = [...activeSessions];
-  if (visible.length < limit) {
-    visible.push(...recentSessions.slice(0, limit - visible.length));
+  if (activeSessions.length > 0) {
+    // Has active sessions — show only those, sorted by most recent first
+    selected = activeSessions.slice(0, limit);
+  } else {
+    // No active sessions — fall back to recently modified (24h)
+    const recentSessions = allSessions.filter(s =>
+      (Date.now() - s.mtime) < 24 * 60 * 60 * 1000
+    );
+    selected = recentSessions.slice(0, limit);
   }
-  const selected = visible.slice(0, limit);
 
   return selected.map(({ filePath, mtime, sessionId }) => {
     // Use Claude Code's own AI-generated title, fall back to history, then first user message
