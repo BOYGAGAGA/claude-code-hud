@@ -1,4 +1,4 @@
-# Claude Code HUD (Fixed) v1.5.2
+# Claude Code HUD (Fixed) v1.5.3
 
 Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and task progress.
 
@@ -52,6 +52,14 @@ code --install-extension LIMINXUE.claude-code-hud-fixed
 | **GitHub** | https://github.com/BOYGAGAGA/claude-code-hud |
 
 ---
+
+## v1.5.3 更新日志 (2026-06-29)
+
+### ✨ 智能任务进度
+- **进度检测**：自动识别任务内容中的进度标记，显示真实百分比
+  - `[3/10]` → 30%，`(60%)` → 60%，`已完成5/8` → 63%
+- **动画进度条**：`in_progress` 任务无具体进度时显示流动动画条（不再死板卡在 50%）
+- 有真实数据 → 真实%，无数据 → 动态流动动画
 
 ## v1.5.2 更新日志 (2026-06-29)
 
