@@ -438,7 +438,7 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
   }
   .follow-hint {
     font-size: 9px;
-    color: #555;
+    color: var(--vscode-foreground, #fff);
     cursor: pointer;
     user-select: none;
   }

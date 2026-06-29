@@ -465,7 +465,7 @@ function buildHtml(s: any, sessions: any[], pinnedFile: string | null, dailySpen
   }
   .follow-hint {
     font-size: 9px;
-    color: #555;
+    color: var(--vscode-foreground, #fff);
     cursor: pointer;
     user-select: none;
   }

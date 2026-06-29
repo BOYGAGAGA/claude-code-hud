@@ -768,6 +768,11 @@ function parseSessionFile(filePath, config) {
         if (!sessionId && entry.sessionId) {
             sessionId = entry.sessionId;
         }
+        // Claude Code stores AI-generated title as type="ai-title" with aiTitle field
+        if (!sessionTitle && entry.type === 'ai-title' && entry.aiTitle) {
+            sessionTitle = entry.aiTitle;
+        }
+        // Fallback: try first user message (only if ai-title not found yet)
         if (!sessionTitle && entry.type === 'user') {
             const msg = entry.message;
             const content = msg?.content;
@@ -920,7 +925,8 @@ function parseSessionFile(filePath, config) {
     return {
         sessionId,
         sessionFile: filePath,
-        sessionTitle: (sessionId && historyTitles.has(sessionId) ? historyTitles.get(sessionId) : (sessionTitle.trim() || 'Untitled Session')),
+        // Title priority: ai-title from jsonl > history.jsonl display > first user message
+        sessionTitle: (sessionTitle.trim() || (sessionId && historyTitles.has(sessionId) ? historyTitles.get(sessionId) : '') || 'Untitled Session'),
         usage,
         cost: {
             inputCost,
@@ -1010,7 +1016,7 @@ function listSessions(workspacePath, limit = 8) {
         return [];
     const activeSessionIds = getActiveSessionIds();
     const historyTitles = readHistoryTitles();
-    return fs.readdirSync(projectDir)
+    const allSessions = fs.readdirSync(projectDir)
         .filter(f => f.endsWith('.jsonl'))
         .map(f => {
         const fp = path.join(projectDir, f);
@@ -1018,17 +1024,21 @@ function listSessions(workspacePath, limit = 8) {
         const sessionId = path.basename(fp, '.jsonl');
         return { filePath: fp, sessionId, mtime };
     })
-        .sort((a, b) => b.mtime - a.mtime)
-        // Filter: only show active sessions or recent ones (last 24h)
-        .filter(s => {
-        const isActive = activeSessionIds.has(s.sessionId);
-        const isRecent = (Date.now() - s.mtime) < 24 * 60 * 60 * 1000;
-        return isActive || isRecent;
-    })
-        .slice(0, limit)
-        .map(({ filePath, mtime, sessionId }) => {
-        // Use Claude Code's own display title, fall back to first user message
-        const title = historyTitles.get(sessionId) ?? readFirstUserMessage(filePath);
+        .sort((a, b) => b.mtime - a.mtime);
+    // Filter: prefer active sessions; if none, fall back to recent ones (24h)
+    const activeSessions = allSessions.filter(s => activeSessionIds.has(s.sessionId));
+    const recentSessions = allSessions.filter(s => !activeSessionIds.has(s.sessionId) && (Date.now() - s.mtime) < 24 * 60 * 60 * 1000);
+    // Show active sessions first, then recent non-active ones, up to limit
+    const visible = [...activeSessions];
+    if (visible.length < limit) {
+        visible.push(...recentSessions.slice(0, limit - visible.length));
+    }
+    const selected = visible.slice(0, limit);
+    return selected.map(({ filePath, mtime, sessionId }) => {
+        // Use Claude Code's own AI-generated title, fall back to history, then first user message
+        const title = historyTitles.get(sessionId)
+            ?? readAiTitle(filePath)
+            ?? readFirstUserMessage(filePath);
         return { filePath, sessionId, title, mtime };
     });
 }
@@ -1056,6 +1066,25 @@ function cleanTitle(raw, maxLen = 60) {
         }
     }
     return title || 'Untitled Session';
+}
+function readAiTitle(filePath) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        // ai-title entries appear early in the file (right after first user message)
+        for (const line of content.split('\n')) {
+            if (!line.trim())
+                continue;
+            try {
+                const d = JSON.parse(line);
+                if (d.type === 'ai-title' && d.aiTitle) {
+                    return d.aiTitle.trim();
+                }
+            }
+            catch { /* skip */ }
+        }
+    }
+    catch { /* skip */ }
+    return null;
 }
 function readFirstUserMessage(filePath) {
     try {

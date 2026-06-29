@@ -1,4 +1,4 @@
-# Claude Code HUD (Fixed) v1.4.0
+# Claude Code HUD (Fixed) v1.5.2
 
 Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and task progress.
 
@@ -52,6 +52,30 @@ code --install-extension LIMINXUE.claude-code-hud-fixed
 | **GitHub** | https://github.com/BOYGAGAGA/claude-code-hud |
 
 ---
+
+## v1.5.2 更新日志 (2026-06-29)
+
+### 🐛 修复
+- **会话标题匹配 Claude Code 显示名称**：读取 JSONL 中的 `ai-title` 条目，显示与 Claude Code 一致的 AI 生成标题（如"评估Claude Code HUD扩展"）
+- **会话数量过滤**：优先显示活跃会话（有 PID 文件），避免显示已关闭的历史会话
+- **UI 文字颜色**：自动跟随按钮提示文字改为白色，提高可读性
+
+### 🔧 标题读取优先级
+1. `ai-title` — Claude Code AI 生成的标题
+2. `history.jsonl` — 历史记录中的 display 字段
+3. 首条用户消息 — 降级方案
+
+## v1.5.1 更新日志 (2026-06-28)
+
+### ✨ 新功能
+- **会话标题栏双行布局**：主行（选择器+按钮）和副行（自动跟随提示），避免按钮被遮挡
+- **URL 清理**：自动从会话标题中移除 URL，显示更简洁
+- **系统消息过滤**：跳过 IDE 通知、系统提醒等非用户消息
+
+### 🐛 修复
+- 会话选择器下拉菜单只显示活跃/最近会话
+- 自动跟随按钮（🔄/📍）移至第二行，不再被遮挡
+- GitHub 仓库地址更新为 https://github.com/BOYGAGAGA/claude-code-hud
 
 ## v1.4.0 更新日志 (2026-06-27)
 
