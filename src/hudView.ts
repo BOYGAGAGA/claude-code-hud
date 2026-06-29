@@ -449,12 +449,27 @@ function buildHtml(s: any, sessions: any[], pinnedFile: string | null, dailySpen
     background: var(--vscode-sideBarSectionHeader-background, #1e1e2e);
     border: 1px solid var(--vscode-widget-border, #333);
     border-radius: 4px;
-    padding: 5px 8px;
     margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .session-bar-main {
+    padding: 5px 8px 2px 8px;
     display: flex;
     align-items: center;
     gap: 6px;
   }
+  .session-bar-sub {
+    padding: 0px 8px 4px 8px;
+    display: flex;
+    align-items: center;
+  }
+  .follow-hint {
+    font-size: 9px;
+    color: #555;
+    cursor: pointer;
+    user-select: none;
+  }
+  .follow-hint:hover { color: var(--vscode-textLink-foreground, #4ec9b0); }
   .session-title-icon { font-size: 13px; flex-shrink: 0; }
   .session-title-text {
     flex: 1;
@@ -577,16 +592,21 @@ function buildHtml(s: any, sessions: any[], pinnedFile: string | null, dailySpen
 <!-- Session Selector -->
 <div class="session-title-bar">
   <span class="session-title-icon">💬</span>
-  ${sessions.length > 1 ? `
-    <select class="session-select" onchange="switchSession(this.value)" title="选择会话">
-      ${sessionOptions}
-    </select>
-  ` : `
-    <span class="session-title-text" title="${escHtml(s.sessionTitle)}">${escHtml(truncate(s.sessionTitle, 60))}</span>
-  `}
-  <span class="session-title-id">${s.sessionId.slice(0, 8)}</span>
-  <button class="auto-follow-btn ${pinnedFile ? 'follow-off' : 'follow-on'}" onclick="toggleAutoFollow()" title="${pinnedFile ? '已固定 → 点击恢复自动跟随' : '自动跟随最新会话 → 点击固定'}">${pinnedFile ? '📍' : '🔄'}</button>
-  <button class="gear-btn" onclick="openSettings()" title="打开配置文件">⚙</button>
+  <div class="session-bar-main">
+    ${sessions.length > 1 ? `
+      <select class="session-select" onchange="switchSession(this.value)" title="选择会话">
+        ${sessionOptions}
+      </select>
+    ` : `
+      <span class="session-title-text" title="${escHtml(s.sessionTitle)}">${escHtml(truncate(s.sessionTitle, 100))}</span>
+    `}
+    <span class="session-title-id">${s.sessionId.slice(0, 8)}</span>
+    <button class="auto-follow-btn ${pinnedFile ? 'follow-off' : 'follow-on'}" onclick="toggleAutoFollow()" title="${pinnedFile ? '已固定 → 点击恢复自动跟随' : '自动跟随最新会话 → 点击固定'}">${pinnedFile ? '📍' : '🔄'}</button>
+    <button class="gear-btn" onclick="openSettings()" title="打开配置文件">⚙</button>
+  </div>
+</div>
+<div class="session-bar-sub">
+  <span class="follow-hint" onclick="toggleAutoFollow()">${pinnedFile ? '📌 已固定 — 点击切换自动跟随' : '🔄 自动跟随最新 — 点击固定当前'}</span>
 </div>
 
 <!-- Context Usage -->

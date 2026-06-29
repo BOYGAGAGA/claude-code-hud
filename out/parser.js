@@ -1032,6 +1032,31 @@ function listSessions(workspacePath, limit = 8) {
         return { filePath, sessionId, title, mtime };
     });
 }
+function cleanTitle(raw, maxLen = 60) {
+    let title = raw
+        .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
+        .replace(/<[^>]+>/g, '') // Remove HTML/XML tags
+        .replace(/\s+/g, ' ') // Collapse whitespace
+        .replace(/^[\s.,;:!?，。；：！？]+/, '') // Trim leading punctuation
+        .trim();
+    // If title is too long, find a good cut point
+    if (title.length > maxLen) {
+        const cutPoints = title.slice(0, maxLen).match(/[.,;:!?，。；：！？\s]/g);
+        if (cutPoints) {
+            const lastCut = title.lastIndexOf(cutPoints[cutPoints.length - 1], maxLen);
+            if (lastCut > maxLen / 2) {
+                title = title.slice(0, lastCut).trim() + '…';
+            }
+            else {
+                title = title.slice(0, maxLen) + '…';
+            }
+        }
+        else {
+            title = title.slice(0, maxLen) + '…';
+        }
+    }
+    return title || 'Untitled Session';
+}
 function readFirstUserMessage(filePath) {
     try {
         const content = fs.readFileSync(filePath, 'utf8');
@@ -1061,10 +1086,11 @@ function readFirstUserMessage(filePath) {
                         candidate.startsWith('<system-') ||
                         candidate.startsWith('<user-info') ||
                         candidate.startsWith('<gitStatus') ||
+                        candidate.startsWith('Continue from where') ||
                         candidate.length < 3) {
                         continue;
                     }
-                    return candidate;
+                    return cleanTitle(candidate);
                 }
             }
             catch { /* skip */ }
