@@ -846,6 +846,7 @@ function parseSessionFile(filePath, config) {
                                     content: key,
                                     status: t.status || 'pending',
                                     model: msg.model || model,
+                                    progress: parseProgress(key),
                                 };
                                 // Detect agent-prefixed tasks: "Agent-X: task description", "[Agent-X] task", "Agent X: task", etc.
                                 const agentMatch = key.match(/^(?:\[)?(?:Agent[-_\s]?([A-Za-z0-9]+))[\]]?:?\s*/i);
@@ -1044,6 +1045,27 @@ function listSessions(workspacePath, limit = 8) {
             ?? readFirstUserMessage(filePath);
         return { filePath, sessionId, title, mtime };
     });
+}
+// Extract progress percentage from task content
+// Detects patterns: [3/10], (60%), 【2/5】, "3/5 done", "已完成 3/8", etc.
+function parseProgress(content) {
+    // [X/Y] or 【X/Y】 pattern
+    let m = content.match(/[\[【](\d+)\s*\/\s*(\d+)[\]】]/);
+    if (m)
+        return Math.round((parseInt(m[1]) / parseInt(m[2])) * 100);
+    // (X%) pattern
+    m = content.match(/\((\d+)\s*%\s*\)/);
+    if (m)
+        return parseInt(m[1]);
+    // X/Y standalone (e.g., "进度 3/5")
+    m = content.match(/[^\d](\d+)\s*\/\s*(\d+)[^\d]/);
+    if (m)
+        return Math.round((parseInt(m[1]) / parseInt(m[2])) * 100);
+    // "X of Y" pattern
+    m = content.match(/(\d+)\s*of\s*(\d+)/i);
+    if (m)
+        return Math.round((parseInt(m[1]) / parseInt(m[2])) * 100);
+    return undefined;
 }
 function cleanTitle(raw, maxLen = 60) {
     let title = raw

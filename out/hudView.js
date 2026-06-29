@@ -92,15 +92,25 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     const totalAgentTasks = agentGroups.reduce((a, g) => a + g.totalCount, 0);
     const doneAgentTasks = agentGroups.reduce((a, g) => a + g.doneCount, 0);
     const todoRows = s.todos.map((t, i) => {
-        const pct = t.status === 'completed' ? 100 : t.status === 'in_progress' ? 50 : 0;
-        const barColor = t.status === 'completed' ? '#4ade80' : t.status === 'in_progress' ? '#60a5fa' : '#334155';
+        const hasProgress = typeof t.progress === 'number';
+        const pct = t.status === 'completed' ? 100
+            : t.status === 'in_progress' ? (hasProgress ? t.progress : 0)
+                : (hasProgress ? t.progress : 0);
+        const barColor = t.status === 'completed' ? '#4ade80'
+            : t.status === 'in_progress' ? '#60a5fa'
+                : '#334155';
+        const showIndeterminate = t.status === 'in_progress' && !hasProgress;
         const model = t.model ? shortModel(t.model) : shortModel(s.model);
         const label = t.content.length > 45 ? t.content.slice(0, 44) + '…' : t.content;
+        const barHtml = showIndeterminate
+            ? `<div class="bar-track" style="height:6px;width:50px;flex:none"><div class="bar-fill bar-indeterminate" style="width:60%;background:linear-gradient(90deg, #60a5fa 0%, #93c5fd 50%, #60a5fa 100%);background-size:200% 100%"></div></div>`
+            : `<div class="bar-track" style="height:6px;width:50px;flex:none"><div class="bar-fill" style="width:${pct}%;background:${barColor}"></div></div>`;
+        const pctLabel = showIndeterminate ? '~' : `${pct}%`;
         return `
       <div class="todo-row ${todoStatusClass(t.status)}">
         <span class="todo-idx">${i + 1}.</span>
-        <div class="bar-track" style="height:6px;width:50px;flex:none"><div class="bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
-        <span class="todo-pct">${pct}%</span>
+        ${barHtml}
+        <span class="todo-pct">${pctLabel}</span>
         <span class="todo-label">${escHtml(label)}</span>
         <span class="todo-model">[${model}]</span>
       </div>`;
@@ -532,6 +542,11 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
+  @keyframes indeterminate-slide {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .bar-indeterminate { animation: indeterminate-slide 1.8s ease-in-out infinite; }
   .budget-bar-pulse { animation: pulse 1.4s ease-in-out infinite; }
   .budget-bar-marker {
     position: absolute;
@@ -716,13 +731,21 @@ ${agentGroups.length > 0 ? `
     ${agentGroups.map((agent) => {
         const agentColor = agent.pct >= 100 ? '#4ade80' : agent.pct > 0 ? '#60a5fa' : '#334155';
         const agentTasksHtml = agent.tasks.map((t) => {
-            const tPct = t.status === 'completed' ? 100 : t.status === 'in_progress' ? 50 : 0;
+            const hasProgress = typeof t.progress === 'number';
+            const tPct = t.status === 'completed' ? 100
+                : t.status === 'in_progress' ? (hasProgress ? t.progress : 0)
+                    : (hasProgress ? t.progress : 0);
             const tColor = t.status === 'completed' ? '#4ade80' : t.status === 'in_progress' ? '#60a5fa' : '#334155';
+            const tShowIndeterminate = t.status === 'in_progress' && !hasProgress;
             const tLabel = t.content.length > 40 ? t.content.slice(0, 39) + '…' : t.content;
+            const tPctLabel = tShowIndeterminate ? '~' : `${tPct}%`;
+            const tBarHtml = tShowIndeterminate
+                ? `<div class="bar-track" style="height:4px;width:40px;flex:none"><div class="bar-fill bar-indeterminate" style="width:60%;background:linear-gradient(90deg, #60a5fa 0%, #93c5fd 50%, #60a5fa 100%);background-size:200% 100%"></div></div>`
+                : `<div class="bar-track" style="height:4px;width:40px;flex:none"><div class="bar-fill" style="width:${tPct}%;background:${tColor}"></div></div>`;
             return `
           <div class="agent-task-row ${todoStatusClass(t.status)}">
-            <div class="bar-track" style="height:4px;width:40px;flex:none"><div class="bar-fill" style="width:${tPct}%;background:${tColor}"></div></div>
-            <span class="todo-pct" style="min-width:28px;font-size:10px">${tPct}%</span>
+            ${tBarHtml}
+            <span class="todo-pct" style="min-width:28px;font-size:10px">${tPctLabel}</span>
             <span class="todo-label" style="font-size:10px">${escHtml(tLabel)}</span>
           </div>`;
         }).join('');
