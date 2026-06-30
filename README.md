@@ -1,4 +1,4 @@
-# Claude Code HUD (Fixed) v1.5.3
+# Claude Code HUD (Fixed) v1.5.4
 
 Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and task progress.
 
@@ -52,6 +52,12 @@ code --install-extension LIMINXUE.claude-code-hud-fixed
 | **GitHub** | https://github.com/BOYGAGAGA/claude-code-hud |
 
 ---
+
+## v1.5.4 更新日志 (2026-06-30)
+
+### ✨ 新交互
+- **点击切换会话**：多个会话时显示为可点击按钮，直接点标题切换，不再用下拉菜单
+- 当前会话高亮显示（加粗+边框），一目了然
 
 ## v1.5.3 更新日志 (2026-06-29)
 

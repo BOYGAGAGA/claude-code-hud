@@ -54,6 +54,9 @@ function fmtCost(usd) {
 function escHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+function escJs(s) {
+    return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+}
 function truncate(s, max) {
     const oneline = s.replace(/\s+/g, ' ').trim();
     return oneline.length > max ? oneline.slice(0, max - 1) + '…' : oneline;
@@ -81,11 +84,14 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     const doneTodos = s.todos.filter((t) => t.status === 'completed').length;
     const activeTodos = s.todos.filter((t) => t.status === 'in_progress').length;
     const totalPct = totalTodos > 0 ? Math.round((doneTodos / totalTodos) * 100) : 0;
-    // Session selector
-    const sessionOptions = sessions.map((sess) => {
-        const isSelected = sess.filePath === s.sessionFile;
-        const title = sess.title.length > 40 ? sess.title.slice(0, 39) + '…' : sess.title;
-        return `<option value="${escHtml(sess.filePath)}" ${isSelected ? 'selected' : ''}>${escHtml(title)}</option>`;
+    // Session selector — clickable title buttons
+    const sessionButtons = sessions.map((sess) => {
+        const isActive = sess.filePath === s.sessionFile;
+        const title = sess.title.length > 45 ? sess.title.slice(0, 44) + '…' : sess.title;
+        const cls = isActive ? 'sess-btn sess-btn-active' : 'sess-btn';
+        return `<button class="${cls}" onclick="switchSession('${escJs(sess.filePath)}')" title="${escHtml(sess.title)}">
+      ${escHtml(title)}
+    </button>`;
     }).join('');
     // Agent groups
     const agentGroups = s.agents || [];
@@ -462,24 +468,42 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
     color: var(--vscode-foreground);
     font-size: 11px;
   }
-  .session-select {
+  .sess-btn-row {
     flex: 1;
-    background: var(--vscode-input-background, #1e1e2e);
-    color: var(--vscode-foreground);
-    border: 1px solid var(--vscode-widget-border, #333);
-    border-radius: 3px;
-    padding: 2px 4px;
-    font-size: 11px;
-    font-family: inherit;
-    cursor: pointer;
-    outline: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
   }
-  .session-select:hover {
+  .sess-btn {
+    display: block;
+    width: 100%;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    color: var(--vscode-descriptionForeground, #888);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 2px 4px;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .sess-btn:hover {
+    color: var(--vscode-foreground);
     border-color: var(--vscode-textLink-foreground, #4ec9b0);
   }
-  .session-select option {
+  .sess-btn-active {
+    color: var(--vscode-foreground, #fff);
+    border-color: var(--vscode-textLink-foreground, #4ec9b0);
     background: var(--vscode-input-background, #1e1e2e);
-    color: var(--vscode-foreground);
+    font-weight: bold;
+  }
+  .sess-btn-active:hover {
+    border-color: var(--vscode-textLink-foreground, #4ec9b0);
   }
   .session-title-id {
     color: #555;
@@ -579,12 +603,10 @@ function buildHtml(s, sessions, pinnedFile, dailySpend, thresholds) {
 
 <!-- Session Selector -->
 <div class="session-title-bar">
-  <span class="session-title-icon">💬</span>
   <div class="session-bar-main">
+    <span class="session-title-icon">💬</span>
     ${sessions.length > 1 ? `
-      <select class="session-select" onchange="switchSession(this.value)" title="选择会话">
-        ${sessionOptions}
-      </select>
+      <div class="sess-btn-row">${sessionButtons}</div>
     ` : `
       <span class="session-title-text" title="${escHtml(s.sessionTitle)}">${escHtml(truncate(s.sessionTitle, 100))}</span>
     `}
